@@ -1,25 +1,30 @@
 package com.smart.q.smartq.config;
 
+import com.smart.q.smartq.security.JwtAuthFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-            .cors(Customizer.withDefaults()) // Enable CORS in Spring Security
+        http
+            .cors(cors -> cors.disable()) // If you have CORS in WebConfig, you can disable here
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .anyRequest().authenticated()
             )
-            .csrf(csrf -> csrf.disable())
-            .formLogin(form -> form.disable()) // Disable form login
-            .httpBasic(httpBasic -> httpBasic.disable()) // Disable httpBasic
-            .build();
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 }
