@@ -1,55 +1,72 @@
 package com.smart.q.smartq.model;
 
-import jakarta.persistence.*;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+	@Id
+	@Column(name = "user_id", updatable = false, nullable = false)
+	private String userId;
 
-    private String name;
+	@PrePersist
+	public void generateId() {
+	    this.userId = UUID.randomUUID().toString();
+	}
 
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(unique = true)
     private String email;
 
+    @Column(name = "phone")
     private String phone;
 
+    @Column(name = "is_active")
+    private Boolean isActive;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, name = "role")
+    private Role role;
+
+    @Column(name = "password_hash")
     private String passwordHash;
 
-    // Public no-args constructor (required)
-    public User() {}
+    public enum Role {
+        ADMIN,
+        STAFF,
+        USER;
 
-    // Getters and setters for all fields
-    public Long getUserId() {
-        return userId;
+        public static Role fromString(String role) {
+            try {
+                return Role.valueOf(role.toUpperCase());
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
     }
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-    public String getName() {
-        return name;
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
-    public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public String getPhone() {
-        return phone;
-    }
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
+
 }
+
