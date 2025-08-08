@@ -40,8 +40,6 @@ public class AuthController {
 	@GetMapping("/me")
 	public ResponseEntity<UserInfoResponse> getCurrentUser() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		System.out.println("Current Authentication: " + authentication);
-		System.out.println("Is Authenticated q");
 		if (authentication == null || !authentication.isAuthenticated()) {
 			return ResponseEntity.status(401).build();
 		}
