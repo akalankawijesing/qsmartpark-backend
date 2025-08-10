@@ -18,6 +18,7 @@ public class ParkingSlotMapperImpl implements ParkingSlotMapper {
         dto.setLocationId(slot.getLocationId());
         dto.setSlotCode(slot.getSlotCode());
         dto.setLevel(slot.getLevel());
+        dto.setSlotType(slot.getSlotType());
         dto.setIsOccupied(slot.isOccupied());
         dto.setIsActive(slot.isActive());
         dto.setCreatedAt(slot.getCreatedAt());

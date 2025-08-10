@@ -20,6 +20,12 @@ public class ReservationRequestDTO {
     
     @NotNull(message = "Date is required")
     private LocalDate date;
+    
+    @NotNull(message = "Vehicle No. is required")
+    private String vehicleNo;
+    
+    @NotNull(message = "Vehicle type is required")
+    private String vehicleType;
 
     @NotNull(message = "Start time is required")
     private LocalDateTime startTime;
