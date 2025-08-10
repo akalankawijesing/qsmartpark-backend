@@ -19,6 +19,7 @@ public class ReservationMapperImpl implements ReservationMapper {
         // Map fields from DTO to Entity
         reservation.setUserId(dto.getUserId());
         reservation.setSlotId(dto.getSlotId());
+        reservation.setDate(dto.getDate());
         reservation.setStartTime(dto.getStartTime());
         reservation.setEndTime(dto.getEndTime());
         reservation.setStatus(dto.getStatus());
@@ -40,6 +41,7 @@ public class ReservationMapperImpl implements ReservationMapper {
         dto.setId(entity.getId());
         dto.setUserId(entity.getUserId());
         dto.setSlotId(entity.getSlotId());
+        dto.setDate(entity.getDate());
         dto.setStartTime(entity.getStartTime());
         dto.setEndTime(entity.getEndTime());
         dto.setStatus(entity.getStatus());
@@ -59,6 +61,7 @@ public class ReservationMapperImpl implements ReservationMapper {
         // Update entity fields from DTO (excluding ID and audit fields)
         entity.setUserId(dto.getUserId());
         entity.setSlotId(dto.getSlotId());
+        entity.setDate(dto.getDate());
         entity.setStartTime(dto.getStartTime());
         entity.setEndTime(dto.getEndTime());
         entity.setStatus(dto.getStatus());
