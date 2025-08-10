@@ -20,11 +20,13 @@ public class ReservationMapperImpl implements ReservationMapper {
         reservation.setUserId(dto.getUserId());
         reservation.setSlotId(dto.getSlotId());
         reservation.setDate(dto.getDate());
+        reservation.setVehicleNo(dto.getVehicleNo());
+        reservation.setVehicleType(dto.getVehicleType());
         reservation.setStartTime(dto.getStartTime());
         reservation.setEndTime(dto.getEndTime());
         reservation.setStatus(dto.getStatus());
         reservation.setQrCode(dto.getQrCode());
-        // Note: id, createdAt, updatedAt are handled by JPA annotations
+        // the id, createdAt, updatedAt are handled by JPA annotations
         
         return reservation;
     }
@@ -42,10 +44,15 @@ public class ReservationMapperImpl implements ReservationMapper {
         dto.setUserId(entity.getUserId());
         dto.setSlotId(entity.getSlotId());
         dto.setDate(entity.getDate());
+        dto.setCost(entity.getCost());
+        dto.setOrderId(entity.getOrderId());
+        dto.setCurrency(entity.getCurrency());
         dto.setStartTime(entity.getStartTime());
         dto.setEndTime(entity.getEndTime());
         dto.setStatus(entity.getStatus());
         dto.setQrCode(entity.getQrCode());
+        dto.setVehicleNo(entity.getVehicleNo());
+        dto.setVehicleType(entity.getVehicleType());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         
@@ -62,6 +69,8 @@ public class ReservationMapperImpl implements ReservationMapper {
         entity.setUserId(dto.getUserId());
         entity.setSlotId(dto.getSlotId());
         entity.setDate(dto.getDate());
+        entity.setVehicleNo(dto.getVehicleNo());
+        entity.setVehicleType(dto.getVehicleType());
         entity.setStartTime(dto.getStartTime());
         entity.setEndTime(dto.getEndTime());
         entity.setStatus(dto.getStatus());

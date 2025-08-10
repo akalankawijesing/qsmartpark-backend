@@ -38,6 +38,9 @@ public class ParkingSlot {
 	@Column(name = "slot_code")
 	private String slotCode;
 
+	@Column(name = "slot_type", nullable = false)
+	private String slotType;
+
 	private int level;
 	
 	@Column(name = "is_occupied")
