@@ -1,6 +1,8 @@
 package com.smart.q.smartq.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -34,8 +36,10 @@ public class Reservation {
 
     @Column(name = "slot_id", nullable = false)
     private String slotId;
-    
-    @Column(name = "date", nullable = false)
+
+    @NotNull(message = "Date cannot be null")
+    @FutureOrPresent(message = "Date must be today or in the future")
+    @Column(name = "date", nullable = false)  // Added this line
     private LocalDate date;
 
     @Column(name = "start_time", nullable = false)
