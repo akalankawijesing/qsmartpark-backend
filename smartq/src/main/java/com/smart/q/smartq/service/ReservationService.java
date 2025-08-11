@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,7 +52,7 @@ public class ReservationService {
 	        requestDTO.getSlotId(),
 	        requestDTO.getStartTime(),
 	        requestDTO.getEndTime(),
-	        List.of("CONFIRMED", "PAYMENT_PENDING")
+	        List.of("CONFIRMED", "PAYMENT_PENDING", "PAYMENT_INITIATED")
 	    );
 	    if (!locked.isEmpty()) {
 	        throw new BusinessException("Slot already booked");
@@ -159,7 +158,7 @@ public class ReservationService {
 	private void checkForOverlappingReservations(ReservationRequestDTO requestDTO) {
 		List<Reservation> overlappingReservations = reservationRepository.findOverlappingReservations(
 				requestDTO.getSlotId(), requestDTO.getStartTime(), requestDTO.getEndTime(),
-				List.of("CONFIRMED", "PAYMENT_PENDING") // Only check active statuses
+				List.of("CONFIRMED", "PAYMENT_PENDING","PAYMENT_INITIATED") // Only check active statuses
 		);
 
 		if (!overlappingReservations.isEmpty()) {
@@ -170,7 +169,7 @@ public class ReservationService {
 	private void checkUserReservationLimits(String userId, LocalDateTime startTime) {
 		// User can only have 3 active reservations at a time
 		long activeReservations = reservationRepository.countActiveReservationsByUser(userId,
-				List.of("CONFIRMED", "PAYMENT_PENDING"));
+				List.of("CONFIRMED", "PAYMENT_PENDING","PAYMENT_INITIATED"));
 
 		if (activeReservations >= 12) {
 			throw new BusinessException("User has reached maximum reservation limit (12)");
@@ -242,7 +241,7 @@ public class ReservationService {
 	        requestDTO.getSlotId(),
 	        requestDTO.getStartTime(),
 	        requestDTO.getEndTime(),
-	        List.of("CONFIRMED", "PAYMENT_PENDING") // statuses to consider locked
+	        List.of("CONFIRMED", "PAYMENT_PENDING","PAYMENT_INITIATED") // statuses to consider locked
 	    );
 
 	    if (!lockedReservations.isEmpty()) {
@@ -292,7 +291,7 @@ public class ReservationService {
 	// ========== HELPER METHODS ==========
 
 	private boolean isValidStatus(String status) {
-		List<String> validStatuses = List.of("PENDING","PAYMENT_PENDING","CONFIRMED", "CANCELLED", "COMPLETED");
+		List<String> validStatuses = List.of("PENDING","PAYMENT_PENDING","PAYMENT_INITIATED","CONFIRMED", "CANCELLED", "COMPLETED", "EXPIRED", "FAILED");
 		return validStatuses.contains(status.toUpperCase());
 	}
 

@@ -1,5 +1,6 @@
 package com.smart.q.smartq.service;
 
+import com.smart.q.smartq.config.PayHereConfig;
 import com.smart.q.smartq.dto.PaymentRequestDTO;
 import com.smart.q.smartq.dto.PaymentResponseDTO;
 import com.smart.q.smartq.exception.BusinessException;
@@ -9,11 +10,14 @@ import com.smart.q.smartq.repository.ReservationRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,6 +27,7 @@ import java.util.Optional;
 public class PaymentService {
 
     private final ReservationRepository reservationRepository;
+    private final PayHereConfig payHereConfig;
 
     private final String merchantSecret = System.getenv("PAYHERE_MERCHANT_SECRET");
     private final String merchantId = System.getenv("PAYHERE_MERCHANT_SECRET");
@@ -109,15 +114,61 @@ public class PaymentService {
     }
 
     public PaymentResponseDTO initiatePayment(@Valid PaymentRequestDTO paymentRequest) {
-        //String orderId = payload.get("order_id");
-       // String status = payload.get("status");
-        //String amount = payload.get("payhere_amount");
-       // String currency = payload.get("payhere_currency");
-       // String receivedHash = payload.get("md5sig"); // Or the hash key sent by PayHere
-        String paymentUrl = "https://www.payhere.lk/pay/" + paymentRequest.getOrderId();
+    	
+    	String orderId = paymentRequest.getOrderId();
+    	Reservation reservation = reservationRepository.findById(orderId)
+				.orElseThrow(() -> new BusinessException("Reservation not found for orderId: " + orderId));
+        
+        //Generate PayHere payment form parameters
+        Map<String, String> paymentParams = generatePayHereParams(reservation, paymentRequest);
+        
+        // 7.3: Generate security hash
+        String hash = generatePayHereHash(paymentParams);
+        paymentParams.put("hash", hash);
+        
+        reservation.setStatus("PAYMENT_INITIATED");
+        reservationRepository.save(reservation);
+        
 
-        // You could add signature generation or other security measures here
+        
+        
 
         return new PaymentResponseDTO(paymentUrl, "Payment initiation successful");
     }
+    
+    private Map<String, String> generatePayHereParams(Reservation reservation, PaymentRequestDTO  paymentRequest) {
+        Map<String, String> params = new HashMap<>();
+        params.put("merchant_id", payHereConfig.getSandboxMarchantId());
+        params.put("return_url", payHereConfig.getReturnUrl());
+        params.put("cancel_url", payHereConfig.getCancelUrl());
+        params.put("notify_url", payHereConfig.getNotifyUrl());
+        params.put("order_id", reservation.getOrderId());
+        params.put("items","Booking Slot On "+reservation.getStartTime()); // e.g., "Booking Slot: 2024-08-11 10:00AM"
+        params.put("currency", reservation.getCurrency());
+        params.put("amount", String.format("%.2f", reservation.getCost()));
+        params.put("first_name", paymentRequest.getFirstName());
+        params.put("last_name", paymentRequest.getLastName());
+        params.put("email", paymentRequest.getEmail());
+        params.put("phone", paymentRequest.getPhone());
+        params.put("country", "Sri Lanka");
+        return params;
+    }
+    
+    private String generatePayHereHash(Map<String, String> params) {
+        String hashString = params.get("merchant_id") + 
+                           params.get("order_id") + 
+                           params.get("amount") + 
+                           params.get("currency") + 
+                           DigestUtils.md5Hex(payHereConfig.getSandboxMarchantSecret()).toUpperCase();
+        
+        return DigestUtils.md5Hex(hashString).toUpperCase();
+    }
+
+    private String generateMD5Signature(String merchantId, String orderId, String amount, String currency, String statusCode) {
+        String hashString = merchantId + orderId + amount + currency + statusCode + 
+                           DigestUtils.md5Hex(payHereConfig.getSandboxMarchantSecret()).toUpperCase();
+        
+        return DigestUtils.md5Hex(hashString).toUpperCase();
+    }
+    
 }
