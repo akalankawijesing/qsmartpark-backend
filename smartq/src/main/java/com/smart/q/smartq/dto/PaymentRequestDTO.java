@@ -11,16 +11,6 @@ public class PaymentRequestDTO {
     @NonNull
     private String orderId;
 
-    @NonNull
-    private BigDecimal amount;
-
-    @NonNull
-    private String currency;
-
-    private String notifyUrl;
-
-    private String returnUrl;
-
     private String firstName;
 
     private String lastName;

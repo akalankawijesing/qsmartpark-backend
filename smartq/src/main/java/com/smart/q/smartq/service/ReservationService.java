@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,38 +40,38 @@ public class ReservationService {
 	// private final QrCodeService qrCodeService;
 	// private final NotificationService notificationService;
 
+	@Transactional
 	public ReservationResponseDTO createReservation(ReservationRequestDTO requestDTO) {
-		log.info("Creating reservation for user: {} and slot: {}", requestDTO.getUserId(), requestDTO.getSlotId());
+	    validateReservationRequest(requestDTO);
+	    validateUser(requestDTO.getUserId());
+	    validateSlotAvailability(requestDTO.getSlotId(), requestDTO.getStartTime(), requestDTO.getEndTime());
 
-		// 1. BUSINESS VALIDATIONS
-		validateReservationRequest(requestDTO);
+	    checkUserReservationLimits(requestDTO.getUserId(), requestDTO.getStartTime());
+	    checkAdvanceBookingLimits(requestDTO.getStartTime());
 
-		// 2. CHECK BUSINESS RULES
-		checkBusinessRules(requestDTO);
+	    List<Reservation> locked = reservationRepository.lockOverlappingReservations(
+	        requestDTO.getSlotId(),
+	        requestDTO.getStartTime(),
+	        requestDTO.getEndTime(),
+	        List.of("CONFIRMED", "PAYMENT_PENDING")
+	    );
+	    if (!locked.isEmpty()) {
+	        throw new BusinessException("Slot already booked");
+	    }
 
-		// 3. CONVERT TO ENTITY
-		Reservation reservation = reservationMapper.toEntity(requestDTO);
+	    Reservation reservation = reservationMapper.toEntity(requestDTO);
+	    reservation.setCost(calculateReservationCost(requestDTO));
+	    reservation.setCurrency("LKR");
+	    preSaveProcessing(reservation, requestDTO);
 
-		// 3.1 Calculate cost based on slot type and duration
-		BigDecimal cost = calculateReservationCost(requestDTO);
+	    Reservation saved = reservationRepository.save(reservation);
+	    log.info("Reservation created: {}", saved.getId());
 
-		reservation.setCost(cost);
+	    postSaveProcessing(saved);
 
-		reservation.setCurrency("LKR");
-
-		// 4. PRE-SAVE PROCESSING
-		preSaveProcessing(reservation, requestDTO);
-
-		// 5. SAVE TO DATABASE
-		Reservation savedReservation = reservationRepository.save(reservation);
-		log.info("Reservation created successfully with ID: {}", savedReservation.getId());
-
-		// 6. POST-SAVE PROCESSING (async operations)
-		postSaveProcessing(savedReservation);
-
-		// 7. RETURN RESPONSE
-		return reservationMapper.toDTO(savedReservation);
+	    return reservationMapper.toDTO(saved);
 	}
+
 
 	// ========== VALIDATION METHODS ==========
 
@@ -114,7 +115,8 @@ public class ReservationService {
 		validateSlotAvailability(requestDTO.getSlotId(), requestDTO.getStartTime(), requestDTO.getEndTime());
 
 		// 3. Check for overlapping reservations
-		checkForOverlappingReservations(requestDTO);
+		//checkForOverlappingReservations(requestDTO);
+		createReservationWithLock(requestDTO);
 
 		// 4. Check user's reservation limits
 		checkUserReservationLimits(requestDTO.getUserId(), requestDTO.getStartTime());
@@ -157,7 +159,7 @@ public class ReservationService {
 	private void checkForOverlappingReservations(ReservationRequestDTO requestDTO) {
 		List<Reservation> overlappingReservations = reservationRepository.findOverlappingReservations(
 				requestDTO.getSlotId(), requestDTO.getStartTime(), requestDTO.getEndTime(),
-				List.of("CONFIRMED", "PENDING") // Only check active statuses
+				List.of("CONFIRMED", "PAYMENT_PENDING") // Only check active statuses
 		);
 
 		if (!overlappingReservations.isEmpty()) {
@@ -166,31 +168,31 @@ public class ReservationService {
 	}
 
 	private void checkUserReservationLimits(String userId, LocalDateTime startTime) {
-		// Example: User can only have 3 active reservations at a time
+		// User can only have 3 active reservations at a time
 		long activeReservations = reservationRepository.countActiveReservationsByUser(userId,
-				List.of("CONFIRMED", "PENDING"));
+				List.of("CONFIRMED", "PAYMENT_PENDING"));
 
 		if (activeReservations >= 12) {
 			throw new BusinessException("User has reached maximum reservation limit (12)");
 		}
 
-		// Example: User can only book 1 slot per day
+		// User can only book 1 slot per day
 		long reservationsOnSameDay = reservationRepository.countReservationsByUserAndDate(userId,
-				startTime.toLocalDate(), List.of("CONFIRMED", "PENDING"));
+				startTime.toLocalDate(), List.of("CONFIRMED", "PAYMENT_PENDING"));
 
-		if (reservationsOnSameDay >= 1) {
+		if (reservationsOnSameDay >= 4) {
 			throw new BusinessException("User can only book one slot per day");
 		}
 	}
 
 	private void checkAdvanceBookingLimits(LocalDateTime startTime) {
-		// Example: Cannot book more than 30 days in advance
+		// Cannot book more than 30 days in advance
 		LocalDateTime maxAdvanceDate = LocalDateTime.now().plusDays(30);
 		if (startTime.isAfter(maxAdvanceDate)) {
 			throw new BusinessException("Cannot book more than 30 days in advance");
 		}
 
-		// Example: Must book at least 1 hour in advance
+		// Must book at least 1 hour in advance
 		LocalDateTime minAdvanceTime = LocalDateTime.now().plusHours(1);
 		if (startTime.isBefore(minAdvanceTime)) {
 			throw new BusinessException("Must book at least 1 hour in advance");
@@ -227,6 +229,27 @@ public class ReservationService {
 		return totalCost;
 	}
 	// ========== PROCESSING METHODS ==========
+	
+	@Transactional
+	public void createReservationWithLock(ReservationRequestDTO requestDTO) {
+	    // Validate inputs first (business validations, user, slot checks)
+	    validateReservationRequest(requestDTO);
+	    validateUser(requestDTO.getUserId());
+	    validateSlotAvailability(requestDTO.getSlotId(), requestDTO.getStartTime(), requestDTO.getEndTime());
+
+	    // Lock overlapping reservations inside this transaction
+	    List<Reservation> lockedReservations = reservationRepository.lockOverlappingReservations(
+	        requestDTO.getSlotId(),
+	        requestDTO.getStartTime(),
+	        requestDTO.getEndTime(),
+	        List.of("CONFIRMED", "PAYMENT_PENDING") // statuses to consider locked
+	    );
+
+	    if (!lockedReservations.isEmpty()) {
+	        throw new BusinessException("Slot already booked for the selected time range");
+	    }
+
+	}
 
 	private void preSaveProcessing(Reservation reservation, ReservationRequestDTO requestDTO) {
 		log.debug("Pre-save processing for reservation");
