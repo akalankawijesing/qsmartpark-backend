@@ -72,6 +72,29 @@ public class Reservation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    
+    // Payment-related fields
+    @Column(name = "payment_id")
+    private String paymentId;
+    
+    @Column(name = "payment_method")
+    private String paymentMethod;
+    
+    @Column(name = "payment_status_code")
+    private String paymentStatusCode;
+    
+    @Column(name = "booking_status")
+    private String bookingStatus;
+    
+    @Column(name = "payment_initiated_at")
+    private LocalDateTime paymentInitiatedAt;
+    
+    @Column(name = "payment_completed_at")
+    private LocalDateTime paymentCompletedAt;
+    
+    @Column(name = "last_updated")
+    private LocalDateTime lastUpdated;
+    
     @PrePersist
     public void prePersist() {
         if (id == null) {

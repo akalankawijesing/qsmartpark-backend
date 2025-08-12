@@ -18,6 +18,7 @@ import java.util.Optional;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, String> {
 
+	   
 	// Find overlapping reservations for a specific slot
 	@Query("SELECT r FROM Reservation r WHERE r.slotId = :slotId " + "AND r.status IN :statuses "
 			+ "AND ((r.startTime < :endTime AND r.endTime > :startTime))")
