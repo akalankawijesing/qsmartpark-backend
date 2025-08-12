@@ -34,7 +34,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
-                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/register","/api/payment/webhook").permitAll()
                 
                 // System routes - only ADMIN and STAFF
                 .requestMatchers("/api/system/**").hasAnyRole("ADMIN", "STAFF")
