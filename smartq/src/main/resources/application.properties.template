@@ -11,20 +11,20 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
 
 # Sandbox configuration (defaults to true)
 payhere.sandbox-mode=${true}
-payhere.sandbox-merchant-id=${1230795}
-payhere.sandbox-merchant-secret=${NzI1MDc3MTYxMjAzMzI3MDUzMzQ4NTM3MTYwNjE0Mjc3MjY4ODc=}
+payhere.sandbox-merchant-id=${MERCHANT_ID:1234567}
+payhere.sandbox-merchant-secret=${MERCHANT_SECRET:your_sandbox_merchant_secret}
 
 # PayHere Configuration
 payhere.sandbox=true
 payhere.merchant-id=${PAYHERE_LIVE_MERCHANT_ID:your_live_merchant_id}
 payhere.merchant-secret=${PAYHERE_LIVE_MERCHANT_SECRET:your_live_merchant_secret}
-payhere.sandbox-merchant-id=${PAYHERE_SANDBOX_MERCHANT_ID:1230795}
-payhere.sandbox-merchant-secret=${PAYHERE_SANDBOX_MERCHANT_SECRET:NzI1MDc3MTYxMjAzMzI3MDUzMzQ4NTM3MTYwNjE0Mjc3MjY4ODc=}
+payhere.sandbox-merchant-id=${PAYHERE_SANDBOX_MERCHANT_ID:sandbox_marchant_id}
+payhere.sandbox-merchant-secret=${PAYHERE_SANDBOX_MERCHANT_SECRET:sansbox_merchant_secret}
 
 # URL Configuration
 app.frontend.url=${FRONTEND_URL:http://localhost:3000}
 app.backend.url=${BACKEND_URL:http://localhost:8080}}
-app.ngrok.url=${NGROK_URL:https://af60045e497b.ngrok-free.app}
+app.ngrok.url=${NGROK_URL:ngrok_url}
 
 # PayHere URLs (automatically set by config)
 payhere.return-url=${app.frontend.url}/payment/success

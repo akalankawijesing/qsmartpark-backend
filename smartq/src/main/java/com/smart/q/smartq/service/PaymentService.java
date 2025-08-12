@@ -35,6 +35,9 @@ public class PaymentService {
     
     @Value("${app.backend.url:http://localhost:8080}")
     private String backendUrl;
+    
+    @Value("${app.ngrok.url:https://af60045e497b.ngrok-free.app/api/payment/webhook}")
+    private String payhereWebhookBackendUrl; 
 
     /**
      * Initiate payment and return configuration for PayHere JavaScript SDK
@@ -82,7 +85,7 @@ public class PaymentService {
         config.put("merchantId", payHereConfig.getMerchantId());
         config.put("returnUrl", frontendUrl + "/payment/success");
         config.put("cancelUrl", frontendUrl + "/payment/cancel");
-        config.put("notifyUrl", "https://af60045e497b.ngrok-free.app/api/payment/webhook");
+        config.put("notifyUrl", payhereWebhookBackendUrl+"/api/payment/webhook");
         config.put("orderId", reservation.getOrderId());
         config.put("items", "Booking Slot On " + reservation.getStartTime());
         config.put("currency", reservation.getCurrency());

@@ -29,5 +29,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Ignore sensitive configuration files
+src/main/resources/application.properties
+
+# Keep template file (this line allows the template to be tracked)
+!src/main/resources/application.properties.template
+
 ### VS Code ###
 .vscode/
