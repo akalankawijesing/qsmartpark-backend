@@ -36,7 +36,7 @@ public class PaymentService {
     @Value("${app.backend.url:http://localhost:8080}")
     private String backendUrl;
     
-    @Value("${app.ngrok.url:https://af60045e497b.ngrok-free.app/api/payment/webhook}")
+    @Value("${app.ngrok.url:https://7cf6b55bff70.ngrok-free.app}")
     private String payhereWebhookBackendUrl; 
 
     /**
